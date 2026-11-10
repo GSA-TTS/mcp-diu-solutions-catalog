@@ -185,6 +185,18 @@ private to the host when nginx is used.
 For any public client, the MCP URL is `https://HOST/mcp`. Configure `/health` for liveness and
 `/ready` for readiness. Never configure multiple Uvicorn workers for this embedded-Qdrant design.
 
+### cloud.gov deployment kit
+
+For cloud.gov hosting behind the GSA hub, use [deploy/cloudgov/README.md](deploy/cloudgov/README.md)
+and its Docker manifest. Keep this kit isolated from the root Dockerfile and DGX deployment.
+Deploy immutable image digests on an internal-only route, verify the CF-selected container port,
+and scope C2C access to Obot on that port. User-facing hub manifests live in the hub repository.
+The existing `/ready` error behavior is intentionally unchanged by this kit.
+The kit's optional `--local-model` build imports an ignored model cache using a named
+BuildKit context. Keep `Dockerfile.local-model` aligned with the root Dockerfile;
+its intentional differences are cache import, offline flags, and network-disabled ingestion.
+FastEmbed's `HF_HUB_OFFLINE=1` prevents runtime model downloads in that variant.
+
 ### Optional API key
 
 Setting `DIU_MCP_API_KEY` protects requests whose path begins with `/mcp`. Clients may send either

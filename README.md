@@ -18,6 +18,8 @@ Use the deployment path that fits the client:
 - **Local or hosted HTTP:** run Streamable HTTP at `/mcp` on port `8001`.
 - **Container host or DGX:** build the Docker image; optionally place nginx in front for a
   trusted-network or public HTTPS endpoint.
+- **cloud.gov / GSA hub:** use the isolated [Docker deployment kit](deploy/cloudgov/README.md)
+  for a private application behind Obot.
 
 The Docker image includes the catalog CSV, Qdrant index, and embedding model, so normal
 container starts do not download or build those assets. See [DEPLOYMENT.md](DEPLOYMENT.md)

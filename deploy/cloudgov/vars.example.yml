@@ -1,0 +1,4 @@
+# Copy to vars.local.yml. Replace every placeholder before deploying.
+app_name: replace-with-approved-app-name
+internal_hostname: replace-with-approved-internal-hostname
+image: ghcr.io/gsa-tts/mcp-diu-solutions-catalog@sha256:REPLACE_WITH_DIGEST

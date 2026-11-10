@@ -1,0 +1,20 @@
+---
+applications:
+  - name: ((app_name))
+    docker:
+      image: ((image))
+    instances: 1
+    memory: 1G
+    disk_quota: 4G
+    timeout: 180
+    health-check-type: http
+    health-check-http-endpoint: /health
+    routes:
+      - route: ((internal_hostname)).apps.internal
+    env:
+      HOST: 0.0.0.0
+      DIU_CATALOG_CSV: /app/data/diu_solutions_catalog.csv
+      DIU_QDRANT_PATH: /app/data/qdrant
+      DIU_MODEL_CACHE: /app/data/models
+# No buildpack, command override, public route, or PORT override.
+# Verify CF's selected Docker port before creating the C2C policy (expected: 8001).
