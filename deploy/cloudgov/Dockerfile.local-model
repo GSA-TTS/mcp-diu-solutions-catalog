@@ -1,0 +1,56 @@
+# Local-cache variant of the root Dockerfile. Keep dependency/runtime steps aligned.
+# Supply the cache via --build-context local_models=/absolute/path/to/model-cache.
+FROM python:3.12-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    HF_HUB_DISABLE_XET=1 \
+    HF_HUB_OFFLINE=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m pip install --no-cache-dir uv==0.11.25
+
+COPY pyproject.toml uv.lock README.md .python-version ./
+COPY src ./src
+COPY data/diu_solutions_catalog.csv ./data/diu_solutions_catalog.csv
+
+RUN uv sync --frozen --no-dev --python 3.12
+COPY --from=local_models / /app/data/models/
+# Missing/incomplete cache fails here; model downloads are impossible in this step.
+RUN --network=none .venv/bin/diu-catalog-ingest \
+    --csv data/diu_solutions_catalog.csv \
+    --db data/qdrant \
+    --model-cache data/models
+
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HF_HUB_DISABLE_XET=1 \
+    HF_HUB_OFFLINE=1 \
+    HOST=0.0.0.0 \
+    PORT=8001 \
+    DIU_CATALOG_CSV=/app/data/diu_solutions_catalog.csv \
+    DIU_QDRANT_PATH=/app/data/qdrant \
+    DIU_MODEL_CACHE=/app/data/models
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app /app
+
+EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD [".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
+
+CMD [".venv/bin/diu-catalog-web"]

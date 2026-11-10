@@ -8,6 +8,17 @@ The hosted server exposes MCP Streamable HTTP at `/mcp`, a liveness check at `/h
 and a data/model readiness check at `/ready`. It is stateless at the MCP transport layer and
 uses one process per container because embedded Qdrant takes an exclusive lock on its local files.
 
+## Private cloud.gov hosting through the GSA hub
+
+Use the isolated [cloud.gov Docker deployment kit](deploy/cloudgov/README.md) to build
+and publish the existing image to GHCR, deploy an immutable digest with an internal-only
+route, and authorize Obot with a port-scoped C2C policy. No Python buildpack is used.
+The external client connects through Obot at `/mcp-connect/<vmcp-id>` without a `/mcp`
+suffix; it does not connect directly to a public DIU application route.
+If Docker cannot download the model through an enterprise TLS proxy, the kit's
+optional `--local-model` mode imports an approved workstation cache and rebuilds
+the index offline in Linux. It does not disable certificate verification.
+
 ## Run locally over HTTP
 
 ```bash
